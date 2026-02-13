@@ -2,132 +2,153 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NetSuite Lead Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>NetSuite Assistant</title>
   <style>
     :root {
-      --bg-1: #f6f8fb;
-      --bg-2: #e9eef5;
-      --ink: #15202b;
-      --muted: #5b6b7a;
+      --bg: #edf2f7;
       --panel: #ffffff;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #d9e2ec;
       --brand: #0f766e;
       --brand-2: #115e59;
-      --line: #d8e1ea;
-      --user: #dbeafe;
       --bot: #f1f5f9;
+      --user: #dcfce7;
       --danger: #b91c1c;
     }
 
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
       margin: 0;
-      min-height: 100vh;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "Aptos", sans-serif;
       color: var(--ink);
-      font-family: "Aptos", "Segoe UI", sans-serif;
-      background: linear-gradient(140deg, var(--bg-1), var(--bg-2));
-      display: grid;
-      place-items: center;
-      padding: 20px;
+      background: linear-gradient(160deg, #f8fafc, var(--bg));
     }
 
-    .layout {
-      width: min(980px, 100%);
-      min-height: 78vh;
+    .app {
+      width: min(1100px, 100%);
+      height: 100dvh;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 280px 1fr;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
       background: var(--panel);
-      box-shadow: 0 24px 40px rgba(10, 20, 30, 0.10);
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
     }
 
     .side {
+      border-right: 1px solid var(--line);
       background: linear-gradient(180deg, #0f172a, #1e293b);
       color: #dbe7ff;
-      padding: 20px;
+      padding: 18px;
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      gap: 14px;
+      grid-template-rows: auto auto auto 1fr;
+      gap: 12px;
+      overflow: auto;
     }
 
     .pill {
       width: fit-content;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      letter-spacing: .04em;
+      font-size: 11px;
+      letter-spacing: .06em;
       text-transform: uppercase;
       border: 1px solid rgba(219, 231, 255, .35);
+      border-radius: 999px;
+      padding: 6px 10px;
     }
 
-    .side h1 { margin: 0; font-size: 20px; line-height: 1.2; }
-    .side p { margin: 0; font-size: 14px; color: #b9c8e5; line-height: 1.45; }
+    .side h1 { margin: 0; font-size: 20px; }
+    .side p { margin: 0; font-size: 14px; line-height: 1.45; color: #bcd0f3; }
+    .side .guide { font-size: 13px; line-height: 1.5; color: #c6d3ec; }
 
-    .guide {
-      border-top: 1px solid rgba(219, 231, 255, .2);
-      padding-top: 14px;
-      font-size: 13px;
-      color: #c6d3ec;
-      line-height: 1.5;
-    }
-
-    .guide strong { color: #ffffff; }
-
-    .main {
+    .chat-shell {
+      min-width: 0;
       display: grid;
-      grid-template-rows: auto 1fr auto auto;
-      min-height: 0;
+      grid-template-rows: auto auto 1fr auto;
+      height: 100%;
     }
 
     .topbar {
-      padding: 14px 18px;
+      min-height: 56px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--line);
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 10px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 3;
     }
 
-    .title { font-size: 16px; font-weight: 700; }
-
+    .title { font-weight: 700; font-size: 16px; }
     .status {
       font-size: 12px;
       color: var(--muted);
-      padding: 5px 9px;
-      border-radius: 999px;
       border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #f8fafc;
+      max-width: 60%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .quick {
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      padding: 8px 10px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .quick button {
+      flex: 0 0 auto;
+      border: 1px solid #cfd9e5;
+      border-radius: 999px;
       background: #f8fbff;
+      color: #243447;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .chat-wrap {
       position: relative;
       min-height: 0;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
     }
 
     #chat {
-      min-height: 0;
       height: 100%;
       overflow-y: auto;
-      padding: 18px;
-      padding-bottom: 64px;
+      padding: 14px;
+      padding-bottom: 74px;
       display: grid;
       gap: 10px;
       align-content: start;
-      background: linear-gradient(180deg, #ffffff, #f8fbff);
-      scroll-behavior: smooth;
       overscroll-behavior: contain;
+      scroll-behavior: smooth;
     }
 
     .msg {
-      max-width: 78%;
-      padding: 10px 12px;
-      border-radius: 14px;
-      line-height: 1.4;
+      max-width: min(80%, 680px);
       border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+      line-height: 1.4;
       white-space: pre-wrap;
-      animation: slideIn .18s ease-out;
+      word-wrap: break-word;
     }
 
     .bot { justify-self: start; background: var(--bot); border-top-left-radius: 6px; }
@@ -136,49 +157,37 @@
     #jumpBtn {
       position: absolute;
       right: 12px;
-      bottom: 12px;
-      border: 1px solid #cfd9e5;
+      bottom: 10px;
+      display: none;
+      border: 1px solid #cbd5e1;
       border-radius: 999px;
-      background: #ffffff;
-      color: #233341;
+      background: #fff;
+      color: #1f2937;
       font-size: 12px;
       font-weight: 700;
       padding: 7px 10px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
       cursor: pointer;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
-      display: none;
       z-index: 2;
     }
 
     #jumpBtn.show { display: inline-block; }
 
-    .quick {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 8px 12px;
-      border-top: 1px dashed var(--line);
-      background: #fff;
-    }
-
-    .quick button {
-      border: 1px solid #cfd9e5;
-      border-radius: 999px;
-      background: #f8fbff;
-      color: #243447;
-      padding: 6px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    form {
+    .composer {
       border-top: 1px solid var(--line);
-      padding: 12px;
+      background: #fff;
+      padding: 10px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      position: sticky;
+      bottom: 0;
+      z-index: 3;
+    }
+
+    .composer form {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 10px;
-      background: #fff;
+      gap: 8px;
+      align-items: center;
     }
 
     #messageInput {
@@ -192,41 +201,54 @@
 
     #messageInput:focus {
       border-color: #94a3b8;
-      box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2);
+      box-shadow: 0 0 0 3px rgba(148, 163, 184, .2);
     }
 
     #sendBtn {
       border: 0;
       border-radius: 12px;
-      padding: 0 18px;
-      font-weight: 700;
+      padding: 0 16px;
+      min-height: 40px;
       color: #fff;
+      font-weight: 700;
       background: linear-gradient(135deg, var(--brand), var(--brand-2));
       cursor: pointer;
     }
 
-    #sendBtn:disabled { cursor: not-allowed; opacity: .55; }
+    #sendBtn:disabled { opacity: .55; cursor: not-allowed; }
     .error { color: var(--danger); }
 
-    @keyframes slideIn {
-      from { transform: translateY(6px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+        border-left: 0;
+        border-right: 0;
+      }
 
-    @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; min-height: 86vh; }
-      .guide { display: none; }
+      .side {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        grid-template-rows: auto auto;
+        gap: 8px;
+        max-height: 110px;
+      }
+
+      .side .guide { display: none; }
+      .side h1 { font-size: 17px; }
+      .side p { font-size: 12px; }
+
+      .status { max-width: 70%; }
+      .msg { max-width: 90%; }
     }
   </style>
 </head>
 <body>
-  <section class="layout">
+  <section class="app">
     <aside class="side">
       <span class="pill">Connected Agent</span>
       <h1>NetSuite Assistant</h1>
       <p>Ask questions, create leads, and fetch lead data in the same chat.</p>
       <div class="guide">
-        <strong>Shortcuts</strong><br/>
         start intake<br/>
         show my lead status<br/>
         show latest leads<br/>
@@ -234,16 +256,11 @@
       </div>
     </aside>
 
-    <main class="main">
+    <main class="chat-shell">
       <header class="topbar">
         <div class="title">Conversation</div>
         <div class="status" id="status">Connecting...</div>
       </header>
-
-      <div class="chat-wrap">
-        <div id="chat"></div>
-        <button id="jumpBtn" type="button">Jump to latest</button>
-      </div>
 
       <div class="quick">
         <button type="button" data-msg="What can you do?">What can you do?</button>
@@ -253,10 +270,17 @@
         <button type="button" data-msg="reset">Reset</button>
       </div>
 
-      <form id="chatForm">
-        <input id="messageInput" type="text" placeholder="Type your message..." autocomplete="off" required />
-        <button type="submit" id="sendBtn">Send</button>
-      </form>
+      <div class="chat-wrap">
+        <div id="chat"></div>
+        <button id="jumpBtn" type="button">Jump to latest</button>
+      </div>
+
+      <div class="composer">
+        <form id="chatForm">
+          <input id="messageInput" type="text" placeholder="Type your message..." autocomplete="off" required />
+          <button type="submit" id="sendBtn">Send</button>
+        </form>
+      </div>
     </main>
   </section>
 
@@ -274,7 +298,7 @@
     const jumpBtn = document.getElementById('jumpBtn');
 
     function isNearBottom() {
-      return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 80;
+      return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 100;
     }
 
     function updateJumpButton() {
@@ -341,12 +365,14 @@
         addMessage('bot', 'There was an error. Please try again.', false);
       } finally {
         sendBtn.disabled = false;
+        input.focus();
       }
     }
 
     async function bootstrap() {
       await sendMessage('', true);
       scrollToBottom(true);
+      input.focus();
     }
 
     chat.addEventListener('scroll', updateJumpButton);
