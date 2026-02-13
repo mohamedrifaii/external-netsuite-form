@@ -6,181 +6,203 @@
   <title>NetSuite Assistant</title>
   <style>
     :root {
-      --bg: #edf2f7;
+      --bg: #f5f7fb;
       --panel: #ffffff;
-      --ink: #1f2937;
-      --muted: #64748b;
-      --line: #d9e2ec;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
       --brand: #0f766e;
       --brand-2: #115e59;
-      --bot: #f1f5f9;
-      --user: #dcfce7;
+      --assistant: #f3f4f6;
+      --user: #d1fae5;
       --danger: #b91c1c;
     }
 
     * { box-sizing: border-box; }
 
     html, body {
-      margin: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
+      margin: 0;
       font-family: "Segoe UI", "Aptos", sans-serif;
       color: var(--ink);
-      background: linear-gradient(160deg, #f8fafc, var(--bg));
+      background: var(--bg);
     }
 
-    .app {
-      width: min(1100px, 100%);
+    .shell {
+      width: 100%;
       height: 100dvh;
-      margin: 0 auto;
       display: grid;
-      grid-template-columns: 280px 1fr;
-      background: var(--panel);
-      border-left: 1px solid var(--line);
-      border-right: 1px solid var(--line);
+      grid-template-columns: 260px 1fr;
     }
 
-    .side {
+    .sidebar {
       border-right: 1px solid var(--line);
-      background: linear-gradient(180deg, #0f172a, #1e293b);
-      color: #dbe7ff;
-      padding: 18px;
-      display: grid;
-      grid-template-rows: auto auto auto 1fr;
-      gap: 12px;
-      overflow: auto;
+      background: #0f172a;
+      color: #dbeafe;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
     }
 
-    .pill {
+    .badge {
       width: fit-content;
-      font-size: 11px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      border: 1px solid rgba(219, 231, 255, .35);
+      border: 1px solid rgba(219, 234, 254, 0.45);
       border-radius: 999px;
-      padding: 6px 10px;
+      padding: 5px 9px;
+      font-size: 11px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
     }
 
-    .side h1 { margin: 0; font-size: 20px; }
-    .side p { margin: 0; font-size: 14px; line-height: 1.45; color: #bcd0f3; }
-    .side .guide { font-size: 13px; line-height: 1.5; color: #c6d3ec; }
+    .sidebar h1 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.2;
+    }
 
-    .chat-shell {
+    .sidebar p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #bfdbfe;
+    }
+
+    .tips {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(219, 234, 254, 0.25);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #c7d2fe;
+    }
+
+    .main {
       min-width: 0;
-      display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
     }
 
     .topbar {
-      min-height: 56px;
-      padding: 10px 14px;
+      height: 56px;
       border-bottom: 1px solid var(--line);
+      padding: 0 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      flex: 0 0 auto;
       background: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 3;
     }
 
-    .title { font-weight: 700; font-size: 16px; }
+    .title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
     .status {
+      max-width: 55%;
       font-size: 12px;
       color: var(--muted);
       border: 1px solid var(--line);
       border-radius: 999px;
-      padding: 4px 8px;
-      background: #f8fafc;
-      max-width: 60%;
+      padding: 4px 9px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      background: #f8fafc;
     }
 
     .quick {
-      border-bottom: 1px solid var(--line);
-      background: #fff;
       padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      scrollbar-width: thin;
+      flex: 0 0 auto;
+      background: #fff;
     }
 
     .quick button {
       flex: 0 0 auto;
-      border: 1px solid #cfd9e5;
+      border: 1px solid #d1d5db;
       border-radius: 999px;
-      background: #f8fbff;
-      color: #243447;
+      background: #f9fafb;
+      color: #1f2937;
       padding: 6px 10px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    .chat-wrap {
+    .conversation {
       position: relative;
+      flex: 1 1 auto;
       min-height: 0;
-      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      background: #fff;
     }
 
     #chat {
       height: 100%;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 14px;
-      padding-bottom: 74px;
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 10px;
-      align-content: start;
-      overscroll-behavior: contain;
-      scroll-behavior: smooth;
     }
 
     .msg {
-      max-width: min(80%, 680px);
+      max-width: min(78%, 760px);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 10px 12px;
-      line-height: 1.4;
       white-space: pre-wrap;
-      word-wrap: break-word;
+      word-break: break-word;
+      line-height: 1.45;
     }
 
-    .bot { justify-self: start; background: var(--bot); border-top-left-radius: 6px; }
-    .user { justify-self: end; background: var(--user); border-top-right-radius: 6px; }
+    .bot {
+      align-self: flex-start;
+      background: var(--assistant);
+      border-top-left-radius: 6px;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: var(--user);
+      border-top-right-radius: 6px;
+    }
 
     #jumpBtn {
       position: absolute;
       right: 12px;
-      bottom: 10px;
+      bottom: 12px;
       display: none;
-      border: 1px solid #cbd5e1;
+      border: 1px solid #d1d5db;
       border-radius: 999px;
       background: #fff;
-      color: #1f2937;
+      color: #111827;
       font-size: 12px;
       font-weight: 700;
       padding: 7px 10px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
       cursor: pointer;
-      z-index: 2;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      z-index: 5;
     }
 
     #jumpBtn.show { display: inline-block; }
 
     .composer {
+      flex: 0 0 auto;
       border-top: 1px solid var(--line);
-      background: #fff;
       padding: 10px;
       padding-bottom: calc(10px + env(safe-area-inset-bottom));
-      position: sticky;
-      bottom: 0;
-      z-index: 3;
+      background: #fff;
     }
 
     .composer form {
@@ -192,25 +214,26 @@
 
     #messageInput {
       width: 100%;
-      border: 1px solid #cfd9e5;
+      border: 1px solid #d1d5db;
       border-radius: 12px;
       padding: 11px 12px;
       font-size: 14px;
       outline: none;
+      background: #fff;
     }
 
     #messageInput:focus {
       border-color: #94a3b8;
-      box-shadow: 0 0 0 3px rgba(148, 163, 184, .2);
+      box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2);
     }
 
     #sendBtn {
+      min-height: 40px;
       border: 0;
       border-radius: 12px;
       padding: 0 16px;
-      min-height: 40px;
-      color: #fff;
       font-weight: 700;
+      color: #fff;
       background: linear-gradient(135deg, var(--brand), var(--brand-2));
       cursor: pointer;
     }
@@ -219,36 +242,31 @@
     .error { color: var(--danger); }
 
     @media (max-width: 900px) {
-      .app {
+      .shell {
         grid-template-columns: 1fr;
-        border-left: 0;
-        border-right: 0;
       }
 
-      .side {
+      .sidebar {
         border-right: 0;
         border-bottom: 1px solid var(--line);
-        grid-template-rows: auto auto;
-        gap: 8px;
-        max-height: 110px;
+        max-height: 104px;
       }
 
-      .side .guide { display: none; }
-      .side h1 { font-size: 17px; }
-      .side p { font-size: 12px; }
-
-      .status { max-width: 70%; }
-      .msg { max-width: 90%; }
+      .tips { display: none; }
+      .sidebar h1 { font-size: 16px; }
+      .sidebar p { font-size: 12px; }
+      .status { max-width: 68%; }
+      .msg { max-width: 92%; }
     }
   </style>
 </head>
 <body>
-  <section class="app">
-    <aside class="side">
-      <span class="pill">Connected Agent</span>
+  <section class="shell">
+    <aside class="sidebar">
+      <span class="badge">Connected Agent</span>
       <h1>NetSuite Assistant</h1>
-      <p>Ask questions, create leads, and fetch lead data in the same chat.</p>
-      <div class="guide">
+      <p>Ask questions, create leads, and fetch lead data in one chat.</p>
+      <div class="tips">
         start intake<br/>
         show my lead status<br/>
         show latest leads<br/>
@@ -256,7 +274,7 @@
       </div>
     </aside>
 
-    <main class="chat-shell">
+    <main class="main">
       <header class="topbar">
         <div class="title">Conversation</div>
         <div class="status" id="status">Connecting...</div>
@@ -270,10 +288,10 @@
         <button type="button" data-msg="reset">Reset</button>
       </div>
 
-      <div class="chat-wrap">
+      <section class="conversation">
         <div id="chat"></div>
         <button id="jumpBtn" type="button">Jump to latest</button>
-      </div>
+      </section>
 
       <div class="composer">
         <form id="chatForm">
@@ -298,7 +316,7 @@
     const jumpBtn = document.getElementById('jumpBtn');
 
     function isNearBottom() {
-      return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 100;
+      return (chat.scrollHeight - chat.scrollTop - chat.clientHeight) < 100;
     }
 
     function updateJumpButton() {
@@ -343,7 +361,10 @@
 
     async function sendMessage(text, isStart) {
       if (!isStart && !text) return;
-      if (!isStart) addMessage('user', text, true);
+
+      if (!isStart) {
+        addMessage('user', text, true);
+      }
 
       setStatus('Sending...', false);
       sendBtn.disabled = true;
