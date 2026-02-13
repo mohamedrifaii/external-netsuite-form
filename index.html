@@ -147,6 +147,26 @@
       border-top-right-radius: 6px;
     }
 
+    .quick {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 12px 10px;
+      border-top: 1px dashed var(--line);
+      background: #fff;
+    }
+
+    .quick button {
+      border: 1px solid #cfd9e5;
+      border-radius: 999px;
+      background: #f8fbff;
+      color: #243447;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
     form {
       border-top: 1px solid var(--line);
       padding: 12px;
@@ -170,7 +190,7 @@
       box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2);
     }
 
-    button {
+    #sendBtn {
       border: 0;
       border-radius: 12px;
       padding: 0 18px;
@@ -180,14 +200,12 @@
       cursor: pointer;
     }
 
-    button:disabled {
+    #sendBtn:disabled {
       cursor: not-allowed;
       opacity: .55;
     }
 
-    .error {
-      color: var(--danger);
-    }
+    .error { color: var(--danger); }
 
     @keyframes slideIn {
       from { transform: translateY(6px); opacity: 0; }
@@ -200,13 +218,7 @@
         min-height: 86vh;
       }
 
-      .side {
-        grid-template-rows: auto auto auto;
-      }
-
-      .guide {
-        display: none;
-      }
+      .guide { display: none; }
     }
   </style>
 </head>
@@ -214,14 +226,13 @@
   <section class="layout">
     <aside class="side">
       <span class="pill">Connected Agent</span>
-      <h1>NetSuite Lead Intake</h1>
-      <p>Natural conversation. The agent collects details and creates one lead record after confirmation.</p>
+      <h1>NetSuite Assistant</h1>
+      <p>Ask questions, then switch to lead intake whenever you are ready.</p>
       <div class="guide">
-        <strong>Examples</strong><br/>
-        My name is John Carter<br/>
-        john@email.com<br/>
-        +1 555 222 1000<br/>
-        Need a quote for ERP integration
+        <strong>Shortcuts</strong><br/>
+        start intake<br/>
+        switch to qa<br/>
+        reset
       </div>
     </aside>
 
@@ -233,6 +244,13 @@
 
       <div id="chat"></div>
 
+      <div class="quick">
+        <button type="button" data-msg="What can you do?">What can you do?</button>
+        <button type="button" data-msg="start intake">Start intake</button>
+        <button type="button" data-msg="switch to qa">Switch to QA</button>
+        <button type="button" data-msg="reset">Reset</button>
+      </div>
+
       <form id="chatForm">
         <input id="messageInput" type="text" placeholder="Type your message..." autocomplete="off" required />
         <button type="submit" id="sendBtn">Send</button>
@@ -241,12 +259,10 @@
   </section>
 
   <script>
-    // Same backend connection as before
     const SUITELET_URL = 'https://3372279-sb1.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=2459&deploy=1&compid=3372279_SB1&ns-at=AAEJ7tMQL5zaBEzE_hb6biwozgV1S8rmJra7tdIIs-NM66jYOUo';
     const TOKEN = 'CHANGE_ME_STRONG_TOKEN';
 
     let state = {};
-    let finished = false;
 
     const chat = document.getElementById('chat');
     const form = document.getElementById('chatForm');
@@ -283,53 +299,50 @@
       return response.json();
     }
 
-    async function bootstrap() {
-      try {
-        const data = await sendToSuitelet('', true);
-        if (!data.ok) throw new Error(data.error || 'Unable to start conversation');
+    async function sendMessage(text, isStart) {
+      if (!isStart && !text) return;
+      if (!isStart) addMessage('user', text);
 
-        state = data.state || {};
-        addMessage('bot', data.reply || 'Hello. What is your name?');
-        setStatus('Connected', false);
-      } catch (err) {
-        setStatus('Connection failed', true);
-        addMessage('bot', 'I could not reach NetSuite. Check Suitelet URL and token.');
-      }
-    }
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (finished) return;
-
-      const text = input.value.trim();
-      if (!text) return;
-
-      addMessage('user', text);
-      input.value = '';
       setStatus('Sending...', false);
       sendBtn.disabled = true;
 
       try {
-        const data = await sendToSuitelet(text, false);
+        const data = await sendToSuitelet(text, isStart);
         if (!data.ok) throw new Error(data.error || 'Request failed');
 
         state = data.state || {};
         addMessage('bot', data.reply || 'Please continue.');
 
         if (data.done) {
-          finished = true;
-          input.disabled = true;
-          sendBtn.disabled = true;
-          setStatus('Record created. ID: ' + (data.recordId || 'N/A'), false);
+          setStatus('Record created. You can keep chatting. ID: ' + (data.recordId || 'N/A'), false);
         } else {
           setStatus('Connected', false);
-          sendBtn.disabled = false;
         }
       } catch (err) {
         setStatus('Error: ' + err.message, true);
         addMessage('bot', 'There was an error. Please try again.');
+      } finally {
         sendBtn.disabled = false;
       }
+    }
+
+    async function bootstrap() {
+      await sendMessage('', true);
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      await sendMessage(text, false);
+    });
+
+    document.querySelectorAll('.quick button').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const text = btn.getAttribute('data-msg') || '';
+        await sendMessage(text, false);
+      });
     });
 
     bootstrap();
