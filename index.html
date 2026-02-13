@@ -20,7 +20,6 @@
     }
 
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
@@ -63,18 +62,8 @@
       border: 1px solid rgba(219, 231, 255, .35);
     }
 
-    .side h1 {
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.2;
-    }
-
-    .side p {
-      margin: 0;
-      font-size: 14px;
-      color: #b9c8e5;
-      line-height: 1.45;
-    }
+    .side h1 { margin: 0; font-size: 20px; line-height: 1.2; }
+    .side p { margin: 0; font-size: 14px; color: #b9c8e5; line-height: 1.45; }
 
     .guide {
       border-top: 1px solid rgba(219, 231, 255, .2);
@@ -88,7 +77,7 @@
 
     .main {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr auto auto;
       min-height: 0;
     }
 
@@ -101,10 +90,7 @@
       gap: 12px;
     }
 
-    .title {
-      font-size: 16px;
-      font-weight: 700;
-    }
+    .title { font-size: 16px; font-weight: 700; }
 
     .status {
       font-size: 12px;
@@ -115,14 +101,23 @@
       background: #f8fbff;
     }
 
+    .chat-wrap {
+      position: relative;
+      min-height: 0;
+    }
+
     #chat {
       min-height: 0;
+      height: 100%;
       overflow-y: auto;
       padding: 18px;
+      padding-bottom: 64px;
       display: grid;
       gap: 10px;
       align-content: start;
       background: linear-gradient(180deg, #ffffff, #f8fbff);
+      scroll-behavior: smooth;
+      overscroll-behavior: contain;
     }
 
     .msg {
@@ -135,23 +130,33 @@
       animation: slideIn .18s ease-out;
     }
 
-    .bot {
-      justify-self: start;
-      background: var(--bot);
-      border-top-left-radius: 6px;
+    .bot { justify-self: start; background: var(--bot); border-top-left-radius: 6px; }
+    .user { justify-self: end; background: var(--user); border-top-right-radius: 6px; }
+
+    #jumpBtn {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      border: 1px solid #cfd9e5;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #233341;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 10px;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
+      display: none;
+      z-index: 2;
     }
 
-    .user {
-      justify-self: end;
-      background: var(--user);
-      border-top-right-radius: 6px;
-    }
+    #jumpBtn.show { display: inline-block; }
 
     .quick {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      padding: 0 12px 10px;
+      padding: 8px 12px;
       border-top: 1px dashed var(--line);
       background: #fff;
     }
@@ -200,11 +205,7 @@
       cursor: pointer;
     }
 
-    #sendBtn:disabled {
-      cursor: not-allowed;
-      opacity: .55;
-    }
-
+    #sendBtn:disabled { cursor: not-allowed; opacity: .55; }
     .error { color: var(--danger); }
 
     @keyframes slideIn {
@@ -213,11 +214,7 @@
     }
 
     @media (max-width: 860px) {
-      .layout {
-        grid-template-columns: 1fr;
-        min-height: 86vh;
-      }
-
+      .layout { grid-template-columns: 1fr; min-height: 86vh; }
       .guide { display: none; }
     }
   </style>
@@ -227,11 +224,12 @@
     <aside class="side">
       <span class="pill">Connected Agent</span>
       <h1>NetSuite Assistant</h1>
-      <p>Ask questions, then switch to lead intake whenever you are ready.</p>
+      <p>Ask questions, create leads, and fetch lead data in the same chat.</p>
       <div class="guide">
         <strong>Shortcuts</strong><br/>
         start intake<br/>
-        switch to qa<br/>
+        show my lead status<br/>
+        show latest leads<br/>
         reset
       </div>
     </aside>
@@ -242,12 +240,16 @@
         <div class="status" id="status">Connecting...</div>
       </header>
 
-      <div id="chat"></div>
+      <div class="chat-wrap">
+        <div id="chat"></div>
+        <button id="jumpBtn" type="button">Jump to latest</button>
+      </div>
 
       <div class="quick">
         <button type="button" data-msg="What can you do?">What can you do?</button>
         <button type="button" data-msg="start intake">Start intake</button>
-        <button type="button" data-msg="switch to qa">Switch to QA</button>
+        <button type="button" data-msg="show my lead status">My lead status</button>
+        <button type="button" data-msg="show latest leads">Latest leads</button>
         <button type="button" data-msg="reset">Reset</button>
       </div>
 
@@ -269,13 +271,29 @@
     const input = document.getElementById('messageInput');
     const statusEl = document.getElementById('status');
     const sendBtn = document.getElementById('sendBtn');
+    const jumpBtn = document.getElementById('jumpBtn');
 
-    function addMessage(role, text) {
+    function isNearBottom() {
+      return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 80;
+    }
+
+    function updateJumpButton() {
+      jumpBtn.classList.toggle('show', !isNearBottom());
+    }
+
+    function scrollToBottom(force) {
+      if (force || isNearBottom()) {
+        chat.scrollTop = chat.scrollHeight;
+      }
+      updateJumpButton();
+    }
+
+    function addMessage(role, text, forceScroll) {
       const div = document.createElement('div');
       div.className = 'msg ' + role;
       div.textContent = text;
       chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+      scrollToBottom(!!forceScroll);
     }
 
     function setStatus(text, isError) {
@@ -301,7 +319,7 @@
 
     async function sendMessage(text, isStart) {
       if (!isStart && !text) return;
-      if (!isStart) addMessage('user', text);
+      if (!isStart) addMessage('user', text, true);
 
       setStatus('Sending...', false);
       sendBtn.disabled = true;
@@ -311,7 +329,7 @@
         if (!data.ok) throw new Error(data.error || 'Request failed');
 
         state = data.state || {};
-        addMessage('bot', data.reply || 'Please continue.');
+        addMessage('bot', data.reply || 'Please continue.', false);
 
         if (data.done) {
           setStatus('Record created. You can keep chatting. ID: ' + (data.recordId || 'N/A'), false);
@@ -320,7 +338,7 @@
         }
       } catch (err) {
         setStatus('Error: ' + err.message, true);
-        addMessage('bot', 'There was an error. Please try again.');
+        addMessage('bot', 'There was an error. Please try again.', false);
       } finally {
         sendBtn.disabled = false;
       }
@@ -328,7 +346,11 @@
 
     async function bootstrap() {
       await sendMessage('', true);
+      scrollToBottom(true);
     }
+
+    chat.addEventListener('scroll', updateJumpButton);
+    jumpBtn.addEventListener('click', () => scrollToBottom(true));
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
